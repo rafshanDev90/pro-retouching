@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useForm } from 'react-hook-form';
 import { GripVertical, Images, Pencil, Plus, Trash2 } from 'lucide-react';
 import api, { getApiErrorMessage } from '../../lib/api';
+import { refreshPublicContent } from '../../lib/publicApi';
 import type { ApiResponse, HeroSlide } from '../../lib/types';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -320,6 +321,7 @@ export const HeroSliderManager: React.FC = () => {
         (old || []).map((slide) => (slide._id === updated._id ? updated : slide))
       );
       toast.success(updated.isActive ? 'Slide activated' : 'Slide hidden');
+      refreshPublicContent(queryClient);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to update slide')),
   });
@@ -332,6 +334,7 @@ export const HeroSliderManager: React.FC = () => {
       toast.success('Slide deleted');
       setDeleteSlide(null);
       void invalidate();
+      refreshPublicContent(queryClient);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to delete slide')),
   });
@@ -355,6 +358,7 @@ export const HeroSliderManager: React.FC = () => {
         order: index,
       })));
       toast.success('Order saved');
+      refreshPublicContent(queryClient);
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Failed to save order'));
       await invalidate();
@@ -443,7 +447,10 @@ export const HeroSliderManager: React.FC = () => {
       <SlideModal
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onSaved={() => void invalidate()}
+        onSaved={() => {
+          void invalidate();
+          refreshPublicContent(queryClient);
+        }}
       />
 
       {/* Edit modal */}
@@ -451,7 +458,10 @@ export const HeroSliderManager: React.FC = () => {
         open={Boolean(editSlide)}
         slide={editSlide}
         onClose={() => setEditSlide(null)}
-        onSaved={() => void invalidate()}
+        onSaved={() => {
+          void invalidate();
+          refreshPublicContent(queryClient);
+        }}
       />
 
       {/* Delete confirm */}

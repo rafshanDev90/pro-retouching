@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Building, Info, Linkedin, Plus, Save, Tag, Trash2 } from 'lucide-react';
 import api, { getApiErrorMessage } from '../../lib/api';
+import { refreshPublicContent } from '../../lib/publicApi';
 import type { ApiResponse, SiteSettings } from '../../lib/types';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -111,6 +112,7 @@ export const SiteSettingsPage: React.FC = () => {
     onSuccess: () => {
       toast.success('Settings saved');
       void queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
+      refreshPublicContent(queryClient);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to save settings')),
   });

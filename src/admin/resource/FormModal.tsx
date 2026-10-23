@@ -1,7 +1,9 @@
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn, FieldValues } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import api, { getApiErrorMessage } from '../../lib/api';
+import { refreshPublicContent } from '../../lib/publicApi';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 
@@ -43,6 +45,7 @@ export function FormModal<V extends FieldValues>({
   size = 'md',
 }: FormModalProps<V>) {
   const [saving, setSaving] = React.useState(false);
+  const queryClient = useQueryClient();
   const isEdit = Boolean(item);
 
   const onSubmit = methods.handleSubmit(async (values) => {
@@ -64,6 +67,7 @@ export function FormModal<V extends FieldValues>({
         await api.post(`/admin/${resource}`, payload);
         toast.success('Created');
       }
+      refreshPublicContent(queryClient);
       onSaved();
       onClose();
     } catch (error) {

@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { CloudUpload, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import api, { getApiErrorMessage } from '../../lib/api';
+import { refreshPublicContent } from '../../lib/publicApi';
 
 export interface UploadedImage {
   url: string;
@@ -23,6 +25,28 @@ interface ImageUploaderProps {
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ACCEPT_ATTR = 'image/jpeg,image/png,image/webp';
 
+/** Turn an upload failure into a short, actionable inline message. */
+function getUploadErrorMessage(error: unknown, maxMB: number): string {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+
+  if (status === 503) {
+    return 'Image uploads are not configured on the server yet. Paste an image URL below instead.';
+  }
+  if (status === 413) {
+    return `This image is too large. Please use a file under ${maxMB} MB.`;
+  }
+  if (status === 415) {
+    return 'Only JPG, PNG and WebP images are allowed.';
+  }
+  if (status === 401) {
+    return 'Your session has expired. Please sign in again.';
+  }
+  if (!(error as { response?: unknown })?.response) {
+    return 'Network error — check your connection and try again, or paste an image URL below.';
+  }
+  return getApiErrorMessage(error, 'Upload failed. Please try again or paste an image URL below.');
+}
+
 /**
  * Drag-and-drop image uploader with client-side validation, live preview
  * and real upload progress (POST /api/admin/upload → Cloudinary).
@@ -36,11 +60,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const previewUrlRef = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Revoke object URLs on unmount / change to avoid leaks.
   useEffect(
@@ -53,13 +79,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const uploadFile = useCallback(
     async (file: File) => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        toast.error('Only JPG, PNG and WebP images are allowed');
+        const message = 'Only JPG, PNG and WebP images are allowed';
+        setErrorMessage(message);
+        toast.error(message);
         return;
       }
       if (file.size > maxMB * 1024 * 1024) {
-        toast.error(`File is too large (max ${maxMB} MB)`);
+        const message = `File is too large (max ${maxMB} MB)`;
+        setErrorMessage(message);
+        toast.error(message);
         return;
       }
+
+      setErrorMessage(null);
 
       // Local preview while uploading
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
@@ -74,7 +106,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       setProgress(0);
 
       try {
-        const res = await api.post('/upload', formData, {
+        const res = await api.post('/admin/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (event) => {
             if (event.total) setProgress(Math.round((event.loaded / event.total) * 100));
@@ -82,6 +114,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         });
         const { url, publicId } = res.data.data as UploadedImage;
         onChange({ url, publicId });
+        refreshPublicContent(queryClient);
+        setErrorMessage(null);
         toast.success('Image uploaded');
       } catch (error) {
         setLocalPreview(null);
@@ -89,12 +123,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           URL.revokeObjectURL(previewUrlRef.current);
           previewUrlRef.current = null;
         }
-        toast.error(getApiErrorMessage(error, 'Upload failed'));
+        const message = getUploadErrorMessage(error, maxMB);
+        setErrorMessage(message);
+        toast.error(message);
       } finally {
         setIsUploading(false);
       }
     },
-    [maxMB, onChange]
+    [maxMB, onChange, queryClient]
   );
 
   const handleFiles = useCallback(
@@ -121,6 +157,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       previewUrlRef.current = null;
     }
     setLocalPreview(null);
+    setErrorMessage(null);
     if (inputRef.current) inputRef.current.value = '';
     onChange(null);
   };
@@ -216,6 +253,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         }}
       />
 
+      {errorMessage && (
+        <p className="mt-2 text-[11px] font-semibold text-red-500" role="alert">
+          {errorMessage}
+        </p>
+      )}
       <p className="mt-2 text-[11px] text-slate-400">{hint}</p>
     </div>
   );

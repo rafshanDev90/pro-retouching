@@ -30,6 +30,14 @@ export function clearPublicCache() {
   cache.clear();
 }
 
+/** Clear the public cache and refetch mounted public queries after an admin write. */
+export function refreshPublicContent(queryClient) {
+  clearPublicCache();
+  if (queryClient && typeof queryClient.invalidateQueries === 'function') {
+    void queryClient.invalidateQueries({ queryKey: ['public'] });
+  }
+}
+
 /* ----------------------------- content GETs ----------------------------- */
 
 export function fetchSlides() {
@@ -113,4 +121,5 @@ export default {
   postContact,
   postFreeTest,
   clearPublicCache,
+  refreshPublicContent,
 };

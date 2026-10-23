@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import api, { getApiErrorMessage } from '../../lib/api';
+import { refreshPublicContent } from '../../lib/publicApi';
 import type { ApiResponse } from '../../lib/types';
 
 interface UseResourceManagerOptions<T> {
@@ -101,6 +102,7 @@ export function useResourceManager<T extends { _id: string; isActive?: boolean; 
       toast.success('Deleted');
       setDeleteItem(null);
       void invalidate();
+      refreshPublicContent(queryClient);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to delete')),
   });
@@ -115,6 +117,7 @@ export function useResourceManager<T extends { _id: string; isActive?: boolean; 
         (old || []).map((item) => (item._id === updated._id ? updated : item))
       );
       toast.success(updated.isActive ? 'Activated' : 'Deactivated');
+      refreshPublicContent(queryClient);
     },
     onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to update')),
   });
@@ -138,6 +141,7 @@ export function useResourceManager<T extends { _id: string; isActive?: boolean; 
         reordered.map((item, index) => ({ id: item._id, order: index }))
       );
       toast.success('Order saved');
+      refreshPublicContent(queryClient);
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Failed to save order'));
       await invalidate();
