@@ -13,7 +13,9 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5000),
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
   JWT_SECRET: z.string().min(8, 'JWT_SECRET must be at least 8 characters'),
-  CLIENT_URL: z.string().default('http://localhost:3000'),
+  CLIENT_URL: z
+    .string()
+    .default('http://localhost:3000,https://pro-retouching-k2my.vercel.app'),
   CLOUDINARY_CLOUD_NAME: z.string().default(''),
   CLOUDINARY_API_KEY: z.string().default(''),
   CLOUDINARY_API_SECRET: z.string().default(''),

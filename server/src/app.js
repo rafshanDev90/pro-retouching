@@ -14,11 +14,21 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 /**
  * Allowed browser origins for CORS. CLIENT_URL accepts a comma-separated list
- * (e.g. "https://app.vercel.app,http://localhost:3000").
+ * (e.g. "https://app.vercel.app,http://localhost:3000"). The deployed frontend
+ * origins below are always allowed as a safety net, even if CLIENT_URL is
+ * misconfigured or missing in the hosting environment.
  */
-const allowedOrigins = env.CLIENT_URL.split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const BUILT_IN_ORIGINS = [
+  'https://pro-retouching-k2my.vercel.app',
+  'https://pro-retouching.vercel.app',
+];
+
+const allowedOrigins = [
+  ...new Set([
+    ...BUILT_IN_ORIGINS,
+    ...env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean),
+  ]),
+];
 
 const app = express();
 
