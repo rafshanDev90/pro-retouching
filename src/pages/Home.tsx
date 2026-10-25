@@ -621,7 +621,7 @@ export const Home: React.FC = () => {
                   <div className={`lg:col-span-6 ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
                     <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200/80 bg-slate-100">
                       <SafeImage
-                        src={service.afterImage}
+                        src={service.image || service.afterImage}
                         alt={service.title}
                         fallbackLabel={service.title}
                         className="block w-full h-auto object-contain"

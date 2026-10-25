@@ -49,6 +49,7 @@ export interface PublicService {
   startingPrice: string;
   turnaround: string;
   bullets: string[];
+  image: string;
   beforeImage: string;
   afterImage: string;
   beforeLabel?: string;
@@ -181,6 +182,7 @@ function mapService(doc: any): PublicService {
     startingPrice: base?.startingPrice || '',
     turnaround: base?.turnaround || '12-24 Hours',
     bullets: doc.bullets?.length ? doc.bullets : base?.bullets || [],
+    image: doc.image || base?.image || '',
     beforeImage: doc.beforeImage || doc.image || base?.beforeImage || '',
     afterImage: doc.afterImage || doc.image || base?.afterImage || '',
     beforeLabel: base?.beforeLabel,

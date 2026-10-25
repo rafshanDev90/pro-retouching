@@ -40,7 +40,7 @@ export const Services: React.FC = () => {
                 {/* Image Preview */}
                 <div className="relative aspect-[16/10] bg-slate-100">
                   <SafeImage
-                    src={service.afterImage}
+                    src={service.image || service.afterImage}
                     alt={service.title}
                     fallbackLabel={service.title}
                     className="w-full h-full object-contain"
