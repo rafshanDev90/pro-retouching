@@ -23,7 +23,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     (async () => {
       try {
-        const res = await api.get<ApiResponse<{ admin: AdminUser }>>('/auth/me');
+        // Timeout so a hung/cold-booting backend can never leave the admin
+        // stuck on the session spinner forever — fall through to the login page.
+        const res = await api.get<ApiResponse<{ admin: AdminUser }>>('/auth/me', {
+          timeout: 15000,
+        });
         if (!cancelled) setAdmin(res.data.data.admin);
       } catch {
         if (!cancelled) setAdmin(null);

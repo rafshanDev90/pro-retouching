@@ -7,6 +7,7 @@ import morgan from 'morgan';
 
 import { env, isProd } from './config/env.js';
 import { connectDB } from './config/db.js';
+import healthRoutes from './routes/health.routes.js';
 import apiRoutes from './routes/index.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -57,6 +58,10 @@ app.use(cookieParser());
 app.use(mongoSanitize());
 
 if (!isProd) app.use(morgan('dev'));
+
+// Health is mounted before the DB gate so it answers even when MongoDB is
+// unreachable — that is exactly when the operator needs it most.
+app.use('/api/health', healthRoutes);
 
 // Ensure the database is connected before any route runs. The connection is
 // cached across invocations, so this is a no-op on warm serverless requests.
