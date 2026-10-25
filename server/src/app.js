@@ -19,7 +19,7 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
  * misconfigured or missing in the hosting environment.
  */
 const BUILT_IN_ORIGINS = [
-  'https://pro-retouching-k2my.vercel.app',
+  'https://pro-retouching-chi.vercel.app/',
   'https://pro-retouching.vercel.app',
 ];
 
